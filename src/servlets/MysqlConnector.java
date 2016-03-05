@@ -19,14 +19,15 @@ public class MysqlConnector {
 	private static String dbTable = null;
 	private static String dbUser = "root";
 	private static String dbPassword = "1234";
+    int new_customer_id = 0;
 
-	public MysqlConnector(String db) {
+	public MysqlConnector() {
 		try {
 			// The newInstance() call is a work around for some
 			// broken Java implementations
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			System.out.println("JDBC driver registered");
-			dbName = db;
+			//dbName = db;
 			//s = new Scanner(System.in);  // Reading from System.in
 			//System.out.println("Enter the database username: ");
 			//dbUser = s.next();
@@ -175,11 +176,7 @@ public class MysqlConnector {
 		}
 	}
 
-/*
- * ​POST [id] [todo message]” : 
- * Stores the string ‘todo message’ in the database with the supplied integer ‘id’ 
- * and the client’s timestamp. Overwrite any existing values.
- */
+
 	public boolean insertCustomer(Customer customer) {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -188,8 +185,7 @@ public class MysqlConnector {
 			// Get the connection to the database
 			con = getConnection();
 			// Execute the query
-			stmt = con.prepareStatement("INSERT INTO " + dbName + ".customers" 
-					+ " VALUES(?,?,?,?,?,?,?,?,?)");
+			stmt = con.prepareStatement("INSERT INTO Hotel_Reservation_System.customers (first_name, last_name, phone_number, billing_address, billing_city, billing_state, billing_zip, checkin_date, checkout_date) VALUES (?,?,?,?,?,?,?,?,?)");
 			stmt.setString(1, customer.getFirstName());
 			stmt.setString(2, customer.getLastName());
 			stmt.setInt(3, customer.getNumber());
@@ -199,8 +195,10 @@ public class MysqlConnector {
 			stmt.setInt(7, customer.getBillingZip());
 			stmt.setString(8, customer.getCheckinDate());
 			stmt.setString(9, customer.getCheckoutDate());
-			//System.out.println(stmt);
-			return stmt.executeUpdate() > 0;
+			System.out.println(stmt);
+			boolean success = stmt.executeUpdate() > 0;
+			getCustomerId(customer.getFirstName(), customer.getLastName());
+			return success;
 		} catch (SQLException ex) {
 			// handle any errors
 			System.out.println("SQLException: " + ex.getMessage());
@@ -236,6 +234,57 @@ public class MysqlConnector {
 		return false;
 	};
 
+	
+	public void getCustomerId(String first_name, String last_name) {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;
+		
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT customer_id FROM Hotel_Reservation_System.customers WHERE first_name = '?' AND last_name = '?'");
+			stmt.setString(1, first_name);
+			stmt.setString(2, last_name);
+			rs = stmt.executeQuery();
+			rs.next();
+			new_customer_id = rs.getInt("id");
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+	}
+	
+	
 	public Room getToDoMessage(int id) {
 		// Get the connection to the database
 		Connection conn = getConnection();
