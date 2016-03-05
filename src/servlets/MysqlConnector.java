@@ -151,7 +151,14 @@ public class MysqlConnector {
 }
 	
 	public void populateRooms(Connection conn) {
+		ResultSet rs = null;
 		try {
+			PreparedStatement checkCount = conn.prepareStatement("SELECT COUNT(*) AS count FROM Hotel_Reservation_System.rooms");
+			rs = checkCount.executeQuery();
+			rs.next();
+			int count = rs.getInt("count");
+			if (count == 0) {
+				
 			PreparedStatement loadSingleRooms = conn.prepareStatement("INSERT INTO "
 					+ "Hotel_Reservation_System.rooms" + " (room_type, price, current_occupant) " +
 					"VALUES ('Single', 100.00, NULL)");
@@ -170,6 +177,7 @@ public class MysqlConnector {
 			for (int i=0;i<10;i++) {
 				loadPresidentialRooms.executeUpdate();
 			};
+			}
 		} catch (SQLException e) {
 			System.out.println("Table creation failed");
 			e.printStackTrace();
@@ -197,7 +205,6 @@ public class MysqlConnector {
 			stmt.setString(9, customer.getCheckoutDate());
 			System.out.println(stmt);
 			boolean success = stmt.executeUpdate() > 0;
-			getCustomerId(customer.getFirstName(), customer.getLastName());
 			return success;
 		} catch (SQLException ex) {
 			// handle any errors
@@ -235,7 +242,7 @@ public class MysqlConnector {
 	};
 
 	
-	public void getCustomerId(String first_name, String last_name) {
+	public int getCustomerId(String first_name, String last_name) {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		Connection con = null;
@@ -244,12 +251,13 @@ public class MysqlConnector {
 			// Get the connection to the database
 			con = getConnection();
 			// Execute the query
-			stmt = con.prepareStatement("SELECT customer_id FROM Hotel_Reservation_System.customers WHERE first_name = '?' AND last_name = '?'");
+			stmt = con.prepareStatement("SELECT customer_id FROM Hotel_Reservation_System.customers WHERE first_name = ? AND last_name = ?");
 			stmt.setString(1, first_name);
 			stmt.setString(2, last_name);
 			rs = stmt.executeQuery();
 			rs.next();
-			new_customer_id = rs.getInt("id");
+			int customer_id = rs.getInt("customer_id");
+			return customer_id;
 		} catch (SQLException ex) {
 			// handle any errors
 			System.out.println("SQLException: " + ex.getMessage());
@@ -282,27 +290,22 @@ public class MysqlConnector {
 				con = null;
 			}
 		}
+		return 0;
 	}
 	
 	
-	public Room getToDoMessage(int id) {
+	public boolean reserveRoom(int id, int room_number) {
 		// Get the connection to the database
 		Connection conn = getConnection();
-		Room message = new Room();
-		if (conn != null) {
-			PreparedStatement stmt = null;
-			ResultSet rs = null;
+		PreparedStatement stmt = null;
 			// Execute the query
 			try {
-				stmt = conn.prepareStatement("SELECT * FROM " + dbName + "." + dbTable + " WHERE id = ?");
+				stmt = conn.prepareStatement("UPDATE Hotel_Reservation_System.rooms SET current_occupant = ? WHERE room_number = ?");
 				stmt.setInt(1, id);
-				//System.out.println(stmt);
-				rs = stmt.executeQuery();
-				rs.next();
-				//message.setId(rs.getInt("id"));
-				//message.setToDoMessage(rs.getString("todo_message"));
-				//message.setTimestamp(rs.getTimestamp("timestamp"));
-				return message;
+				stmt.setInt(2, room_number);
+				stmt.executeUpdate();
+				boolean reserved = stmt.executeUpdate() > 0;
+				return reserved;
 			} catch (SQLException ex) {
 				// handle any errors
 				System.out.println("SQLException: " + ex.getMessage());
@@ -313,15 +316,6 @@ public class MysqlConnector {
 				// resources in a finally{} block
 				// in reverse-order of their creation
 				// if they are no-longer needed
-
-				if (rs != null) {
-					try {
-						rs.close();
-					} catch (SQLException sqlEx) {
-					} // ignore
-
-					rs = null;
-				}
 
 				if (stmt != null) {
 					try {
@@ -341,8 +335,7 @@ public class MysqlConnector {
 				}
 
 			}
-		}
-		return message;
+		return false;
 	};
 
 	public List<Room> getAllMessages() {

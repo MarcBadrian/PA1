@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 
 import model.Customer;
+import model.Room;
 import servlets.MysqlConnector;
 
 
@@ -76,7 +77,6 @@ public class HotelReservationServlet extends HttpServlet {
 	 */
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-				//Scanner s = new Scanner(System.in);  // Reading from System.in
 		    	MysqlConnector connector = new MysqlConnector();
 				Integer choice = Integer.parseInt(request.getParameter("choice"));
 				PrintWriter out = response.getWriter();
@@ -95,27 +95,37 @@ public class HotelReservationServlet extends HttpServlet {
 						Integer billing_zip = Integer.parseInt(request.getParameter("billing_zip"));
 						String checkin_date = request.getParameter("checkin_date");
 						String checkout_date = request.getParameter("checkout_date");
-						out.println(first_name + last_name + phone_number + billing_address + billing_zip + checkout_date);
 						Customer newCust = new Customer();
 						newCust.setName(first_name, last_name);
 						newCust.setNumber(phone_number);
 						newCust.setBillingInfo(billing_address, billing_city, billing_state, billing_zip);
 						newCust.setCheckInOut(checkin_date, checkout_date);
 						boolean success = connector.insertCustomer(newCust);
-					    out.println(success);
-						int id = connector.new_customer_id;
+						int id = connector.getCustomerId(first_name, last_name);
+						out.println(id);
 						response.setContentType("text/html");
-					    out.println("<h1>" + newCust + "</h1>");
 						if(!success){
 						      out.println("<h1>" + "Error!" + "</h1>");
 						      break;
 						}else{
-						      out.println("<h1>" + "Customer id: " + id + "</h1>");
+							out.println("You have successfully created a new customer!" + "\n" + "Customer id: " + id);
 						      break;
 						}
 					case 2:
-						
-						break;
+						int customer_id = Integer.parseInt(request.getParameter("customer_id"));
+						int room_number = Integer.parseInt(request.getParameter("room_number"));
+						boolean reserved = connector.reserveRoom(customer_id, room_number);
+						out.println(reserved);
+						out.println("test");
+
+						response.setContentType("text/html");
+						if(!reserved){
+						      out.println("Error!");
+						      break;
+						}else{
+							out.println("You have successfully reserved room: " + room_number + " for customer id: " + customer_id);
+						      break;
+						}
 					case 3:
 						
 						break;

@@ -5,7 +5,7 @@ public class Room {
 	private int room_number;
 	private String type;
 	private double price;
-	private String current_occupant;
+	private int current_occupant;
 	
 	// getter methods
 	public int getRoomNumber() {
@@ -20,7 +20,7 @@ public class Room {
 		return price;
 	}
 	
-	public String getCurrentOccupant() {
+	public int getCurrentOccupant() {
 		return current_occupant;
 	}
 
@@ -37,7 +37,7 @@ public class Room {
 		this.price = price;
 	}
 	
-	public void setOccupant(String current_occupant) {
+	public void setOccupant(int current_occupant) {
 		this.current_occupant = current_occupant;
 	}
 

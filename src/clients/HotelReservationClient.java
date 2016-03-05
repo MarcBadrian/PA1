@@ -121,7 +121,7 @@ public class HotelReservationClient {
 						System.out.println();
 						
 						// Parse the URL
-						String urlParameters  = "choice=" + choice + "&customer_id=" + customer_id + "&room_number" + room_number;
+						String urlParameters  = "choice=" + choice + "&customer_id=" + customer_id + "&room_number=" + room_number;
 						byte[] postData       = urlParameters.getBytes( StandardCharsets.UTF_8 );
 						int    postDataLength = postData.length;
 						String request        = "http://localhost:8080/PA1/Reservations";
