@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +19,7 @@ import java.util.Scanner;
 import model.Customer;
 import model.Room;
 import model.Transaction;
+import sun.net.www.URLConnection;
 
 public class HotelReservationClient {
 
@@ -80,13 +83,26 @@ public class HotelReservationClient {
 		//HotelReservationClient client = new HotelReservationClient();
 		String request = "";
 		String params = "";
+		/*
+		String first_name = "";
+		String last_name = "";
+		String phone_number = "";
+		String billing_address = "";
+		String billing_city = "";
+		String billing_state = "";
+		String billing_zip = "";
+		String checkin_date = "";
+		String checkout_date = "";
+		*/
 		//MysqlConnector conn = client.connector;
 		//String username = conn.getUser();
 		//String password = conn.getPassword();
 		int choice = 0;
 		boolean again = true;
-		do {
-			try {
+		//do {
+			
+			//try {
+				
 				System.out.print("\n" + "Choose one of the following options: " + "\n"
 						+ "(1) CREATE CUSTOMER" + "\n"
 						+ "(2) RESERVE ROOM" + "\n"
@@ -173,29 +189,99 @@ public class HotelReservationClient {
 					e.printStackTrace();
 
 				};
-				    request = request + params;
-					URL    url            = new URL( request );
+				
+				    request = request + "?" + params;
+					try {
+						
+						System.out.println("Making POST call");
+						// Parse the URL
+						String urlParameters  = params;
+						byte[] postData       = urlParameters.getBytes( StandardCharsets.UTF_8 );
+						int    postDataLength = postData.length;
+						//String request        = "http://localhost:8080/ServletExample/Hello?param2=b";
+						URL    url            = new URL( request );
+						HttpURLConnection conn= (HttpURLConnection) url.openConnection();
+						
+						conn.setDoOutput( true );
+						conn.setInstanceFollowRedirects( false );
+						conn.setRequestMethod( "POST" );
+						conn.setRequestProperty( "Content-Type", "text/html"); 
+						conn.setRequestProperty( "charset", "utf-8");
+						conn.setRequestProperty( "Content-Length", Integer.toString( postDataLength ));
+						conn.setUseCaches( false );
+						conn.connect();
+						try( DataOutputStream wr = new DataOutputStream( conn.getOutputStream())) {
+			   				wr.write( postData );
+						}
+			/*
+
+			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			String next_record = null;
+			while ((next_record = reader.readLine()) != null) {
+				System.out.println(next_record);
+						
+						conn.setDoOutput( true );
+						conn.setDoInput( true );
+						conn.setInstanceFollowRedirects( false );
+						conn.setRequestMethod( "POST" );
+						conn.setRequestProperty( "Content-Type", "text/html"); 
+						conn.setRequestProperty( "charset", "utf-8");
+						conn.setRequestProperty( "Content-Length", Integer.toString( postDataLength ));
+						conn.setUseCaches( false );
+						conn.connect();
+
+						try( DataOutputStream wr = new DataOutputStream( conn.getOutputStream())) {
+						   wr.write( postData );
+						}
+						
+
+						BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+						String next_record = null;
+						while ((next_record = reader.readLine()) != null) {
+							System.out.println(next_record);
+						}
+						
+						
+						URL    url            = new URL( request );
+						HttpURLConnection conn = (HttpURLConnection) url.openConnection(); 
+						System.out.println(request);
+						conn.setInstanceFollowRedirects( false );
+						conn.setDoOutput(true);
+						conn.setRequestMethod( "GET" );
+						conn.setUseCaches( false );
+						
+						BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+						String next_record;
+						while ((next_record = reader.readLine()) != null) {
+							System.out.println(next_record);
+						}
+						reader.close();
+/*
+					} catch (MalformedURLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						*/
+					
 					//String charset = java.nio.charset.StandardCharsets.UTF_8.name();
 					//URLConnection connection = new URL(request + "?" + params).openConnection();
 					//connection.setRequestProperty("Accept-Charset", charset);
 					//InputStream response = connection.getInputStream();
-
-					HttpURLConnection conn = (HttpURLConnection) url.openConnection();   
 					
-					conn.setInstanceFollowRedirects( false );
-					conn.setRequestMethod( "GET" );
-					conn.setUseCaches( false );				
-					
-					BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-					String next_record = null;
-					while ((next_record = reader.readLine()) != null) {
-						System.out.println(next_record);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
+
+					//HttpURLConnection conn = (HttpURLConnection) url.openConnection();   
+			
+					/*
 				} catch (IOException e) {
 					throw new RuntimeException("Please try again. \n" + e);
+					
 				}
-				
-		} while (again == true);
+				*/
+		//} while (again == true);
 	}
 
-}
+};
+

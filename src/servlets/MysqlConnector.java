@@ -15,7 +15,7 @@ import model.Transaction;
 
 public class MysqlConnector {
 
-	private static String dbName = null;
+	private static String dbName = "Hotel_Reservation_System";
 	private static String dbTable = null;
 	private static String dbUser = "root";
 	private static String dbPassword = "1234";
@@ -100,58 +100,72 @@ public class MysqlConnector {
 		}
 	}
 
-	public void createTables(Connection conn, String table1, String table2, String table3) {
+	public void createCustomersTable(Connection conn) {
+
+		PreparedStatement createTable;
+			PreparedStatement createTable1;
+			try {
+				createTable = conn.prepareStatement("USE Hotel_Reservation_System; ");
+				createTable.executeUpdate();
+				createTable1 = conn.prepareStatement( 
+						"CREATE TABLE IF NOT EXISTS customers ( customer_id INT NOT NULL AUTO_INCREMENT, first_name VARCHAR(25) NOT NULL, last_name VARCHAR(40) NOT NULL, phone_number INT, billing_address VARCHAR(100), billing_city VARCHAR(50), billing_state VARCHAR(2), billing_zip INT,  checkin_date VARCHAR(25),  checkout_date VARCHAR(25), PRIMARY KEY(customer_id))");
+				createTable1.executeUpdate();
+
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+	}
+	
+	public void createRoomsTable(Connection conn) {
+		PreparedStatement createTable2;
+		PreparedStatement createTable;
+
 		try {
-			PreparedStatement createTable1 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS " 
-					+ dbName + "." + table1 + "("
-					+ "id 				INT NOT NULL AUTO_INCREMENT, "
-					+ "first_name 		VARCHAR(25) NOT NULL, "
-					+ "last_name 		VARCHAR(40) NOT NULL, "
-					+ "phone_number 	INT, "
-					+ "billing_address 	VARCHAR(100), "
-					+ "billing_city 	VARCHAR(50), "
-					+ "billing_state 	VARCHAR(2), "
-					+ "billing_zip 		INT, "
-					+ "checkin_date 	VARCHAR(25), "
-					+ "checkout_date 	VARCHAR(25), "
-					+ "PRIMARY KEY (id) " + ")");
-			createTable1.executeUpdate();
-			PreparedStatement createTable2 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS " 
-					+ dbName + "." + table2 + "("
-					+ "room_number 			INT NOT NULL AUTO_INCREMENT, "
-					+ "type 				VARCHAR(100) NOT NULL, "
-					+ "price 				FLOAT NOT NULL, "
-					+ "current_occupant		INT,"	
-					+ "PRIMARY KEY (room_number), " 
-					+ "FOREIGN KEY (current_occupant) REFERENCES customer(id)" + ")");
+			createTable = conn.prepareStatement("USE Hotel_Reservation_System; ");
+			createTable.executeUpdate();
+			createTable2 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS rooms ( room_number INT NOT NULL AUTO_INCREMENT, room_type VARCHAR(100) NOT NULL, price FLOAT NOT NULL, current_occupant INT, FOREIGN KEY (current_occupant) REFERENCES customers(customer_id), PRIMARY KEY(room_number))");
 			createTable2.executeUpdate();
-			PreparedStatement createTable3 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS " 
-					+ dbName + "." + table3 + "("
-					+ "id 				INT NOT NULL AUTO_INCREMENT, "
-					+ "customer_id		INT NOT NULL,"
-					+ "room_id			INT NOT NULL,"
-					+ "amount			FLOAT NOT NULL,"
-					+ "cc_number		INT NOT NULL, "
-					+ "expiration_date 	INT NOT NULL, "
-					+ "PRIMARY KEY (id), "
-					+ "FOREIGN KEY (customer_id) REFERENCES customer(id)," 
-					+ "FOREIGN KEY (room_id) REFERENCES room(id)" + ")");
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+}
+			
+	public void createTransactionsTable(Connection conn) {
+		PreparedStatement createTable3;
+		PreparedStatement createTable;
+
+		try {
+			createTable = conn.prepareStatement("USE Hotel_Reservation_System; ");
+			createTable.executeUpdate();
+			createTable3 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS transactions ( transaction_id	INT NOT NULL AUTO_INCREMENT, customer_id	INT NOT NULL, room_number	INT NOT NULL, amount	FLOAT NOT NULL, cc_number	INT NOT NULL, expiration_date INT NOT NULL, FOREIGN KEY (customer_id) REFERENCES customers(customer_id), FOREIGN KEY (room_number) REFERENCES rooms (room_number), PRIMARY KEY(transaction_id))");
 			createTable3.executeUpdate();
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+}
+	
+	public void populateRooms(Connection conn) {
+		try {
 			PreparedStatement loadSingleRooms = conn.prepareStatement("INSERT INTO "
-					+ dbName + "." + table2 + "(type, price, current_occupant) " +
-					"VALUES ('Single', 100.00, NULL");
+					+ "Hotel_Reservation_System.rooms" + " (room_type, price, current_occupant) " +
+					"VALUES ('Single', 100.00, NULL)");
 			for (int i=0;i<40;i++) {
 				loadSingleRooms.executeUpdate();
 			};
 			PreparedStatement loadDoubleRooms = conn.prepareStatement("INSERT INTO "
-					+ dbName + "." + table2 + "(type, price, current_occupant) " +
-					"VALUES ('Double', 150.00, NULL");
+					+ "Hotel_Reservation_System.rooms" + " (room_type, price, current_occupant) " +
+					"VALUES ('Double', 150.00, NULL)");
 			for (int i=0;i<50;i++) {
 				loadDoubleRooms.executeUpdate();
 			};
 			PreparedStatement loadPresidentialRooms = conn.prepareStatement("INSERT INTO "
-					+ dbName + "." + table2 + "(type, price, current_occupant) " +
-					"VALUES ('Presidential', 300.00, NULL");
+					+ "Hotel_Reservation_System.rooms" + " (room_type, price, current_occupant) " +
+					"VALUES ('Presidential', 300.00, NULL)");
 			for (int i=0;i<10;i++) {
 				loadPresidentialRooms.executeUpdate();
 			};
@@ -174,11 +188,17 @@ public class MysqlConnector {
 			// Get the connection to the database
 			con = getConnection();
 			// Execute the query
-			stmt = con.prepareStatement("INSERT INTO " + dbName + "." + dbTable 
+			stmt = con.prepareStatement("INSERT INTO " + dbName + ".customers" 
 					+ " VALUES(?,?,?,?,?,?,?,?,?)");
-			//stmt.setInt(1, todo.getId());
-			//stmt.setString(2, todo.getMessage());
-			//stmt.setTimestamp(3, todo.getTimestamp());
+			stmt.setString(1, customer.getFirstName());
+			stmt.setString(2, customer.getLastName());
+			stmt.setInt(3, customer.getNumber());
+			stmt.setString(4, customer.getBillingAddress());
+			stmt.setString(5, customer.getBillingCity());
+			stmt.setString(6, customer.getBillingState());
+			stmt.setInt(7, customer.getBillingZip());
+			stmt.setString(8, customer.getCheckinDate());
+			stmt.setString(9, customer.getCheckoutDate());
 			//System.out.println(stmt);
 			return stmt.executeUpdate() > 0;
 		} catch (SQLException ex) {
