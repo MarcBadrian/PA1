@@ -448,7 +448,7 @@ public class MysqlConnector {
 					"Id: " + customer_id + "\n" +
 					"Name: " + first_name + " " + last_name + "\n" +
 					"Phone Number: " + phone_number + "\n" +
-					"Billing Address: " + billing_address + "\n" + "\t" + "\t" + "\t" + billing_city + ", " + billing_state + "  " + billing_zip + "\n" +
+					"Billing Address: " + billing_address + "\n" + "\t" + "\t" + billing_city + ", " + billing_state + "  " + billing_zip + "\n" +
 					"Check-In Date: " + checkin_date + "\n" +
 					"Check-Out Date: " + checkout_date + "\n";
 			return custInfo;
