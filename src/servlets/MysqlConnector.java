@@ -1,55 +1,34 @@
+/*
+ * COMP 6302 - Web Services / Internet
+ * PA1: Hotel Reservation System
+ * Marc Badrian and Hien Vo - Due 3/5/16
+ * 
+ */
+
 package servlets;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 import model.Customer;
-import model.Room;
-import model.Transaction;
+
 
 
 public class MysqlConnector {
 
 	private static String dbName = "Hotel_Reservation_System";
-	private static String dbTable = null;
 	private static String dbUser = "root";
 	private static String dbPassword = "1234";
     int new_customer_id = 0;
 
 	public MysqlConnector() {
 		try {
-			// The newInstance() call is a work around for some
-			// broken Java implementations
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			System.out.println("JDBC driver registered");
-			//dbName = db;
-			//s = new Scanner(System.in);  // Reading from System.in
-			//System.out.println("Enter the database username: ");
-			//dbUser = s.next();
-			//System.out.println("Enter the database password: ");
-			//dbPassword = s.next();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	public MysqlConnector(Scanner s, String db) {
-		try {
-			// The newInstance() call is a work around for some
-			// broken Java implementations
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			System.out.println("JDBC driver registered");
-			dbName = db;
-			s = new Scanner(System.in);  // Reading from System.in
-			System.out.println("Enter the database username: ");
-			dbUser = s.next();
-			System.out.println("Enter the database password: ");
-			dbPassword = s.next();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -109,7 +88,7 @@ public class MysqlConnector {
 				createTable = conn.prepareStatement("USE Hotel_Reservation_System; ");
 				createTable.executeUpdate();
 				createTable1 = conn.prepareStatement( 
-						"CREATE TABLE IF NOT EXISTS customers ( customer_id INT NOT NULL AUTO_INCREMENT, first_name VARCHAR(25) NOT NULL, last_name VARCHAR(40) NOT NULL, phone_number INT, billing_address VARCHAR(100), billing_city VARCHAR(50), billing_state VARCHAR(2), billing_zip INT,  checkin_date VARCHAR(25),  checkout_date VARCHAR(25), PRIMARY KEY(customer_id))");
+						"CREATE TABLE IF NOT EXISTS customers ( customer_id INT NOT NULL AUTO_INCREMENT, first_name VARCHAR(25) NOT NULL, last_name VARCHAR(40) NOT NULL, phone_number INT, billing_address VARCHAR(100), billing_city VARCHAR(50), billing_state VARCHAR(20), billing_zip INT,  checkin_date VARCHAR(25),  checkout_date VARCHAR(25), PRIMARY KEY(customer_id))");
 				createTable1.executeUpdate();
 
 			} catch (SQLException e) {
@@ -141,7 +120,7 @@ public class MysqlConnector {
 		try {
 			createTable = conn.prepareStatement("USE Hotel_Reservation_System; ");
 			createTable.executeUpdate();
-			createTable3 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS transactions ( transaction_id	INT NOT NULL AUTO_INCREMENT, customer_id	INT NOT NULL, room_number	INT NOT NULL, amount	FLOAT NOT NULL, cc_number	INT NOT NULL, expiration_date INT NOT NULL, FOREIGN KEY (customer_id) REFERENCES customers(customer_id), FOREIGN KEY (room_number) REFERENCES rooms (room_number), PRIMARY KEY(transaction_id))");
+			createTable3 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS transactions ( transaction_id	INT NOT NULL AUTO_INCREMENT, customer_id	INT NOT NULL, room_number	INT NOT NULL, amount	FLOAT NOT NULL, cc_number	INT(20) NOT NULL, expiration_date INT NOT NULL, FOREIGN KEY (customer_id) REFERENCES customers(customer_id), FOREIGN KEY (room_number) REFERENCES rooms (room_number), PRIMARY KEY(transaction_id))");
 			createTable3.executeUpdate();
 
 		} catch (SQLException e) {
@@ -337,108 +316,455 @@ public class MysqlConnector {
 			}
 		return false;
 	};
-
-	public List<Room> getAllMessages() {
-		// Get the connection to the database
-		Connection conn = getConnection();
-		List<Room> messages = new ArrayList<Room>();
-
-		if (conn != null) {
-			PreparedStatement stmt = null;
-			ResultSet rs = null;
-			try {
-				// Execute the query
-				stmt = conn.prepareStatement("SELECT * FROM " + dbName + "." + dbTable);
-				rs = stmt.executeQuery();
-				while (rs.next()) {
-					Room message = new Room();
-					//message.setId(rs.getInt("id"));
-					//message.setToDoMessage(rs.getString("todo_message"));
-					//message.setTimestamp();
-					messages.add(message);
-				}
-				return messages;
-			} catch (SQLException ex) {
-				// handle any errors
-				System.out.println("SQLException: " + ex.getMessage());
-				System.out.println("SQLState: " + ex.getSQLState());
-				System.out.println("VendorError: " + ex.getErrorCode());
-			} finally {
-				// it is a good idea to release
-				// resources in a finally{} block
-				// in reverse-order of their creation
-				// if they are no-longer needed
-
-				if (rs != null) {
-					try {
-						rs.close();
-					} catch (SQLException sqlEx) {
-					} // ignore
-
-					rs = null;
-				}
-
-				if (stmt != null) {
-					try {
-						stmt.close();
-					} catch (SQLException sqlEx) {
-					} // ignore
-
-					stmt = null;
-				}
-				if(conn != null){
-					try {
-						conn.close();
-					} catch (SQLException sqlEx) {
-					} // ignore
-
-					conn = null;
-				}
-
-			}
-		}
-		return messages;
-	}
-
-	public boolean deleteMessage(int id) {
-		// Get the connection to the database
-		Connection conn = getConnection();
-		if (conn != null) {
-			PreparedStatement stmt = null;
+	
+	public boolean createPayment(int customer_id, int room_number, float amount, int cc_number, int exp_date) {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;
+		try {
+			// Get the connection to the database
+			con = getConnection();
 			// Execute the query
-			try {
-				stmt = conn.prepareStatement("DELETE FROM " + dbName + "." + dbTable + " WHERE id = ?");
-				stmt.setInt(1, id);
-				//System.out.println(stmt);
-				stmt.executeUpdate();
-				return true;
-			} catch (SQLException ex) {
-				// handle any errors
-				System.out.println("SQLException: " + ex.getMessage());
-				System.out.println("SQLState: " + ex.getSQLState());
-				System.out.println("VendorError: " + ex.getErrorCode());
-			} finally {
-				// it is a good idea to release
-				// resources in a finally{} block
-				// in reverse-order of their creation
-				// if they are no-longer needed
-				if (stmt != null) {
-					try {
-						stmt.close();
-					} catch (SQLException sqlEx) {
-					} // ignore
-					stmt = null;
-				}
-				if(conn != null){
-					try {
-						conn.close();
-					} catch (SQLException sqlEx) {
-					} // ignore
-					conn = null;
-				}
+			stmt = con.prepareStatement("INSERT INTO Hotel_Reservation_System.transactions (customer_id, room_number, amount, cc_number, expiration_date) VALUES (?,?,?,?,?)");
+			stmt.setInt(1, customer_id);
+			stmt.setInt(2, room_number);
+			stmt.setFloat(3, amount);
+			stmt.setInt(4, cc_number);
+			stmt.setInt(5, exp_date);
+			System.out.println(stmt);
+			boolean success = stmt.executeUpdate() > 0;
+			return success;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
 			}
 		}
 		return false;
+	};
+
+	
+	public int getTransactionId(int customer_id, int room_number) {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;
+		
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT transaction_id FROM Hotel_Reservation_System.transactions WHERE customer_id = ? AND room_number = ? ORDER BY transaction_id DESC");
+			stmt.setInt(1, customer_id);
+			stmt.setInt(2, room_number);
+			rs = stmt.executeQuery();
+			rs.next();
+			int transaction_id = rs.getInt("transaction_id");
+			return transaction_id;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+		return 0;
 	}
+
+	public String getCustomer(int id) {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;
+		
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT * FROM Hotel_Reservation_System.customers WHERE customer_id = ?");
+			stmt.setInt(1, id);
+			rs = stmt.executeQuery();
+			rs.next();
+			String customer_id = Integer.toString(rs.getInt("customer_id"));
+			String first_name = rs.getString("first_name");
+			String last_name = rs.getString("last_name");
+			String phone_number = Integer.toString(rs.getInt("phone_number"));
+			String billing_address = rs.getString("billing_address");
+			String billing_city = rs.getString("billing_city");
+			String billing_state = rs.getString("billing_state");
+			String billing_zip = Integer.toString(rs.getInt("billing_zip"));
+			String checkin_date = rs.getString("checkin_date");
+			String checkout_date = rs.getString("checkout_date");
+			String custInfo = "Customer Information: " + "\n" + "\n" +
+					"Id: " + customer_id + "\n" +
+					"Name: " + first_name + " " + last_name + "\n" +
+					"Phone Number: " + phone_number + "\n" +
+					"Billing Address: " + billing_address + "\n" + "\t" + "\t" + "\t" + billing_city + ", " + billing_state + "  " + billing_zip + "\n" +
+					"Check-In Date: " + checkin_date + "\n" +
+					"Check-Out Date: " + checkout_date + "\n";
+			return custInfo;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+		return "Error";
+	}
+	
+	public String getCustomersByName(String f_name, String l_name) {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;	
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT * FROM Hotel_Reservation_System.customers WHERE first_name = ? OR last_name = ?");
+			stmt.setString(1, f_name);
+			stmt.setString(2, l_name);
+			rs = stmt.executeQuery();
+			String allMatches = "Last Name:		First Name:		Id:		Phone Number: " + "\n" + "\n";
+			while (rs.next()) {
+			String customer_id = Integer.toString(rs.getInt("customer_id"));
+			String first_name = rs.getString("first_name");
+			String last_name = rs.getString("last_name");
+			String phone_number = Integer.toString(rs.getInt("phone_number"));
+			String custInfo = last_name + "\t" + "\t" + "\t" + first_name + "\t" + "\t" + "\t" + customer_id + "\t" + "\t" + phone_number + "\n";
+			allMatches += custInfo;
+			}
+			return allMatches;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+		return "Error";
+	}
+	
+	public String getCustomersCurrent() {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;	
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT * FROM Hotel_Reservation_System.rooms JOIN Hotel_Reservation_System.customers ON rooms.current_occupant = customers.customer_id");
+			rs = stmt.executeQuery();
+			String allMatches = "Last Name:		First Name:		Id:		Phone Number: " + "\n" + "\n";
+			while (rs.next()) {
+			String customer_id = Integer.toString(rs.getInt("customer_id"));
+			String first_name = rs.getString("first_name");
+			String last_name = rs.getString("last_name");
+			String phone_number = Integer.toString(rs.getInt("phone_number"));
+			String custInfo = last_name + "\t" + "\t" + "\t" + first_name + "\t" + "\t" + "\t" + customer_id + "\t" + "\t" + phone_number + "\n";
+			allMatches += custInfo;
+			}
+			return allMatches;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+		return "Error";
+	}
+	
+	
+	public String getTransactions(int customer_id) {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;
+		
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT * FROM Hotel_Reservation_System.transactions JOIN Hotel_Reservation_System.customers ON transactions.customer_id = customers.customer_id WHERE transactions.customer_id = ?");
+			stmt.setInt(1, customer_id);
+			rs = stmt.executeQuery();
+			String allMatches = "Transaction Id:		Amount:			First Name:	Last Name:	" + "\n" + "\n";
+			while (rs.next()) {
+				String transaction_id = Integer.toString(rs.getInt("transaction_id"));
+				String amount = Float.toString(rs.getFloat("amount"));
+				String first_name = rs.getString("first_name");
+				String last_name = rs.getString("last_name");
+			String custInfo = transaction_id + "\t" + "\t" + "\t" + amount + "\t" + "\t" + "\t" + first_name + "\t" + "\t" + last_name + "\n";
+			allMatches += custInfo;
+			}
+			return allMatches;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+		return "Error";
+	}
+	
+
+	public String getVacancies() {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;	
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT room_number, room_type FROM Hotel_Reservation_System.rooms WHERE current_occupant IS NULL");
+			rs = stmt.executeQuery();
+			String allMatches = "Room Number:	Room Type: " + "\n" + "\n";
+			while (rs.next()) {
+			String room_number = Integer.toString(rs.getInt("room_number"));
+			String room_type = rs.getString("room_type");
+			String custInfo = room_number + "\t" + "\t" + room_type + "\n";
+			allMatches += custInfo;
+			}
+			return allMatches;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+		return "Error";
+	}
+	
+	
+	public String getReservations() {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		Connection con = null;	
+		try {
+			// Get the connection to the database
+			con = getConnection();
+			// Execute the query
+			stmt = con.prepareStatement("SELECT room_number, first_name, last_name FROM Hotel_Reservation_System.rooms JOIN Hotel_Reservation_System.customers ON rooms.current_occupant = customers.customer_id");
+			rs = stmt.executeQuery();
+			String allMatches = "Room Number:	First Name:	Last Name: " + "\n";
+			while (rs.next()) {
+			String room_number = Integer.toString(rs.getInt("room_number"));
+			String first_name = rs.getString("first_name");
+			String last_name = rs.getString("last_name");
+			String custInfo = room_number + "\t" + "\t" + first_name + "\t" + "\t" + last_name + "\n";
+			allMatches += custInfo;
+			}
+			return allMatches;
+		} catch (SQLException ex) {
+			// handle any errors
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		} finally {
+			// it is a good idea to release
+			// resources in a finally{} block
+			// in reverse-order of their creation
+			// if they are no-longer needed
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				rs = null;
+			}
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				stmt = null;
+			}
+			if(con != null){
+				try {
+					con.close();
+				} catch (SQLException sqlEx) {
+				} // ignore
+				con = null;
+			}
+		}
+		return "Error";
+	}
+	
 
 }

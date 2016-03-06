@@ -1,3 +1,10 @@
+/*
+ * COMP 6302 - Web Services / Internet
+ * PA1: Hotel Reservation System
+ * Marc Badrian and Hien Vo - Due 3/5/16
+ * 
+ */
+
 package model;
 
 public class Room {
